@@ -1,0 +1,51 @@
+containers:
+- name: {{ name }}
+  image: {{ image }}
+  resources:
+    limits:
+      cpu: {{ cpu }}
+      memory: {{ memory }}
+{% if gpu > 0 %}
+      gpu: {{ gpu }}
+{% endif %}
+    requests:
+      cpu: {{ cpu }}
+      memory: {{ memory }}
+{% if gpu > 0 %}
+      gpu: {{ gpu }}
+{% endif %}
+  command: 
+    - "/bin/bash"
+    - "-c"
+    - |
+      {{ command|indent(width=6,indentfirst=False) }}
+  stdin: true
+  tty: true
+  env:
+    - name: GOOGLE_APPLICATION_CREDENTIALS
+      value: {{ gac }}
+{% if env|length > 0 %}
+    {{ env|indent(width=6,indentfirst=False) }}
+{% endif %}
+  volumeMounts:
+    - mountPath: {{ config_map_path }}
+      name: {{ config_map }}
+  ports:
+    - containerPort: {{ port }}
+volumes:
+  - configMap:
+      name: {{ config_map }}
+    name: {{ config_map }}
+{% if hostname != None %}
+hostname: {{ hostname }}
+{% endif %}
+{% if subdomain != None %}
+subdomain: {{ subdomain }}
+{% endif %}
+{% if restartpolicy != None %}
+restartPolicy: {{ restartpolicy }}
+{% endif %}
+{% if gpu > 0 %}
+nodeSelector:
+    cloud.google.com/gke-accelerator: nvidia-tesla-p100
+{% endif %}

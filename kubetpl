@@ -1,0 +1,80 @@
+#!/usr/bin/python3
+
+import sys
+import os
+import os.path
+import jinja2
+import jsonargparse
+import yaml
+import re
+
+myname = "kubetpl"
+path = f"./{myname}-templates:./.{myname}:{sys.prefix}/{myname}"
+path += f":/usr/local/lib/{myname}:/usr/lib/{myname}"
+
+parser = jsonargparse.ArgumentParser(
+    description="Generate kubectl templates.",
+    prog="kubetpl",
+    env_prefix="KUBETPL",
+    default_config_files=["kubetpl.yaml", "kubetpl.yml", ".kubetpl.yaml", ".kubetpl.yml"]
+    )
+parser.add_argument("-l", "--config", action=jsonargparse.ActionConfigFile)
+parser.add_argument("-L", "--label", action="append", default=[])
+parser.add_argument("-a", "--app", default=None)
+parser.add_argument("-n", "--name", default="mytask")
+parser.add_argument("-c", "--command", default="true")
+parser.add_argument("-C", "--cpu", type=int, default=1)
+parser.add_argument("-M", "--memory", default="4G")
+parser.add_argument("-G", "--gpu", type=int, default=0)
+parser.add_argument("-A", "--accelerator", default="nvidia-tesla-p100")
+parser.add_argument("-I", "--image", default="ubuntu:18.04")
+parser.add_argument("-e", "--env", action="append", default=[])
+parser.add_argument("-p", "--param", action="append", default=[])
+parser.add_argument("--shell", default="/bin/bash")
+parser.add_argument("--config-map-path", default="/files")
+parser.add_argument("--config-map", default="files")
+parser.add_argument("--hostname", default=None)
+parser.add_argument("--subdomain", default=None)
+parser.add_argument("--port", type=int, default=10000)
+parser.add_argument("--gac", default=None)
+parser.add_argument("--restartpolicy", default="Never")
+parser.add_argument("--path", default=path)
+parser.add_argument("template")
+args = parser.parse_args()
+
+if len(args.param) > 0:
+    params = [p.split("=", 1) for p in args.param]
+    params = {p[0]: p[1] for p in params}
+    args.command = args.command.format(**params)
+
+if args.hostname is None:
+    args.hostname = args.name
+
+if args.app is None:
+    app = re.sub("[^a-zA-Z]", "", os.popen("hostname").read().strip())
+    app += "-"
+    app += re.sub("[^a-zA-Z]", "", os.popen("whoami").read().strip())
+    app += "-"
+    app += re.sub(".*/", "", os.popen("pwd").read().strip())
+    print(f"app={app}", file=sys.stderr)
+    args.app = app
+
+if len(args.env) > 0:
+    env = [(lambda s: dict(name=s[0], value=s[1]))(e.split("=", 1)) for e in args.env]
+    args.env = yaml.dump(env, default_flow_style=False)
+
+ls = [s.split("=", 1) for s in args.label]
+args.label = {l[0]: l[1] for l in ls}
+
+if args.gac == "None":
+    args.gac = None
+else:
+    args.gac = args.gac or args.config_map_path + "/google_application_credentials.json"
+
+env = jinja2.Environment(
+    loader=jinja2.FileSystemLoader(args.path.split(":")))
+
+template = env.get_template(f"{args.template}.yaml")
+result = template.render(**args.__dict__)
+result = re.sub("\n\s*\n", "\n", result)
+print(result.strip())

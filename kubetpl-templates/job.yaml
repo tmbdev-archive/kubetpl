@@ -1,0 +1,16 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ name }}
+  labels:
+    app: {{ app }}
+{% for key, value in label.items() %}
+    {{ key }}: {{ value }}
+{% endfor %}
+spec:
+  backoffLimit: 0
+  template:
+    spec:
+{% filter indent(width=6) %}
+{% include "podspec.yaml" %}
+{% endfilter %}

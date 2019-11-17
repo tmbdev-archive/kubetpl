@@ -1,0 +1,14 @@
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: {{ name }}
+  labels:
+    app: {{ app }}
+{% for key, value in label.items() %}
+    {{ key }}: {{ value }}
+{% endfor %}
+spec:
+{% filter indent(width=2) %}
+{% include "podspec.yaml" %}
+{% endfilter %}
