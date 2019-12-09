@@ -25,22 +25,22 @@ containers:
       {{ command|indent(width=6,indentfirst=False) }}
   stdin: true
   tty: true
-{% if gac != None %}
   env:
+{% if gac != None %}
     - name: GOOGLE_APPLICATION_CREDENTIALS
       value: {{ gac }}
 {% endif %}
 {% if env|length > 0 %}
-    {{ env|indent(width=6,indentfirst=False) }}
+    {{ env|indent(width=4,indentfirst=False) }}
 {% endif %}
 {% if config_map != None %}
   volumeMounts:
     - mountPath: {{ config_map_path }}
       name: {{ config_map }}
 {% endif %}
-{% if port > 0 %}
+{% if ports|length > 0 %}
   ports:
-    - containerPort: {{ port }}
+    {{ ports|indent(width=4,indentfirst=False) }}
 {% endif %}
 {% if config_map != None %}
 volumes:
