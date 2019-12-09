@@ -3,16 +3,20 @@ containers:
   image: {{ image }}
   resources:
     limits:
+{% if cpu > 0 %}
       cpu: {{ cpu }}
+{% endif %}
       memory: {{ memory }}
 {% if gpu > 0 %}
-      gpu: {{ gpu }}
+      nvidia.com/gpu: "{{ gpu }}"
 {% endif %}
     requests:
+{% if cpu > 0 %}
       cpu: {{ cpu }}
+{% endif %}
       memory: {{ memory }}
 {% if gpu > 0 %}
-      gpu: {{ gpu }}
+      nvidia.com/gpu: "{{ gpu }}"
 {% endif %}
   command: 
     - "/bin/bash"
@@ -21,21 +25,29 @@ containers:
       {{ command|indent(width=6,indentfirst=False) }}
   stdin: true
   tty: true
+{% if gac != None %}
   env:
     - name: GOOGLE_APPLICATION_CREDENTIALS
       value: {{ gac }}
+{% endif %}
 {% if env|length > 0 %}
     {{ env|indent(width=6,indentfirst=False) }}
 {% endif %}
+{% if config_map != None %}
   volumeMounts:
     - mountPath: {{ config_map_path }}
       name: {{ config_map }}
+{% endif %}
+{% if port > 0 %}
   ports:
     - containerPort: {{ port }}
+{% endif %}
+{% if config_map != None %}
 volumes:
   - configMap:
       name: {{ config_map }}
     name: {{ config_map }}
+{% endif %}
 {% if hostname != None %}
 hostname: {{ hostname }}
 {% endif %}
@@ -45,7 +57,7 @@ subdomain: {{ subdomain }}
 {% if restartpolicy != None %}
 restartPolicy: {{ restartpolicy }}
 {% endif %}
-{% if gpu > 0 %}
+{% if accelerator != None %}
 nodeSelector:
-    cloud.google.com/gke-accelerator: nvidia-tesla-p100
+    cloud.google.com/gke-accelerator: {{ accelerator }}
 {% endif %}

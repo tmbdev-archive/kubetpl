@@ -9,5 +9,5 @@ setup(
     description = "Generate Kubernetes templates from the command line.",
     author_email = "tmbdev@gmail.com",
     data_files = [("lib/kubetpl", files )],
-    scripts = ["kubetpl"],
+    scripts = ["kubetpl", "kubefcm"],
 ) 

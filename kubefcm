@@ -1,0 +1,14 @@
+#!/bin/bash
+name="$1"
+shift
+args=
+if test -f $GOOGLE_APPLICATION_CREDENTIALS; then
+     args="--from-file=google_application_credentials.json=$GOOGLE_APPLICATION_CREDENTIALS"
+fi
+for f in "$@"; do
+    arg="--from-file=`basename $f`=$f"
+    echo -- $arg
+    args="$args $arg"
+done
+kubectl delete configmap $name
+kubectl create configmap $name $args

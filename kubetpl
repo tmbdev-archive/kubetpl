@@ -23,20 +23,20 @@ parser.add_argument("-L", "--label", action="append", default=[])
 parser.add_argument("-a", "--app", default=None)
 parser.add_argument("-n", "--name", default="mytask")
 parser.add_argument("-c", "--command", default="true")
-parser.add_argument("-C", "--cpu", type=int, default=1)
-parser.add_argument("-M", "--memory", default="4G")
+parser.add_argument("-C", "--cpu", type=float, default=-1)
+parser.add_argument("-M", "--memory", default="1G")
 parser.add_argument("-G", "--gpu", type=int, default=0)
-parser.add_argument("-A", "--accelerator", default="nvidia-tesla-p100")
+parser.add_argument("-A", "--accelerator", default=None)
 parser.add_argument("-I", "--image", default="ubuntu:18.04")
 parser.add_argument("-e", "--env", action="append", default=[])
 parser.add_argument("-p", "--param", action="append", default=[])
 parser.add_argument("--shell", default="/bin/bash")
 parser.add_argument("--config-map-path", default="/files")
-parser.add_argument("--config-map", default="files")
+parser.add_argument("--config-map", default=None)
 parser.add_argument("--hostname", default=None)
 parser.add_argument("--subdomain", default=None)
-parser.add_argument("--port", type=int, default=10000)
-parser.add_argument("--gac", default=None)
+parser.add_argument("--port", type=int, default=-1)
+parser.add_argument("--gac", default="none")
 parser.add_argument("--restartpolicy", default="Never")
 parser.add_argument("--path", default=path)
 parser.add_argument("template")
@@ -56,7 +56,7 @@ if args.app is None:
     app += re.sub("[^a-zA-Z]", "", os.popen("whoami").read().strip())
     app += "-"
     app += re.sub(".*/", "", os.popen("pwd").read().strip())
-    print(f"app={app}", file=sys.stderr)
+    #print(f"app={app}", file=sys.stderr)
     args.app = app
 
 if len(args.env) > 0:
@@ -66,9 +66,9 @@ if len(args.env) > 0:
 ls = [s.split("=", 1) for s in args.label]
 args.label = {l[0]: l[1] for l in ls}
 
-if args.gac == "None":
+if args.gac == "none":
     args.gac = None
-else:
+elif args.gac == "default":
     args.gac = args.gac or args.config_map_path + "/google_application_credentials.json"
 
 env = jinja2.Environment(
